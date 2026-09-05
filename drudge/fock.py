@@ -1509,6 +1509,7 @@ class GenEPhDrudge(MixDrudge):
     DEFAULT_BOSE_DUMMS = symbols("x y z") + tuple(
         Symbol("x{}".format(i)) for i in range(21)
     )
+    DEFAULT_BOSE_RANGE = Range("B", 0, Symbol("nb"))
     DEFAULT_SPIN_DUMMS = tuple(
         Symbol("sigma{}".format(i)) for i in range(50)
     )
@@ -1519,7 +1520,7 @@ class GenEPhDrudge(MixDrudge):
         fermi_op_label="c",
         bose_op_label="b",
         fermi_orb=((Range("F"), DEFAULT_FERMI_DUMMS),),
-        bose_orb=((Range("B"), DEFAULT_BOSE_DUMMS),),
+        bose_orb=((DEFAULT_BOSE_RANGE, DEFAULT_BOSE_DUMMS),),
         spin=(),
         fermi_density=IndexedBase("rho"),
         one_body=IndexedBase("h"),
@@ -1622,6 +1623,8 @@ class GenEPhDrudge(MixDrudge):
             self.set_dumms(range_, dumms)
             bose_orb_ranges.append(range_)
         self.bose_orb_ranges = bose_orb_ranges
+        if len(bose_orb_ranges) == 1 and bose_orb_ranges[0].bounded:
+            self.set_name(nb=bose_orb_ranges[0].size)
 
         spin = list(spin)
         if len(spin) == 0:
@@ -1845,6 +1848,19 @@ class RestrictedGenEPhDrudge(GenEPhDrudge):
 
         self.spin_range = spin_range
         self.spin_dumms = self.dumms.value[spin_range]
+
+        sigma = self.spin_dumms[0]
+        p = Symbol("p")
+        q = Symbol("q")
+        self.e_ = TensorDef(
+            Vec("E"),
+            (p, q),
+            self.sum(
+                (sigma, spin_range),
+                self.fermi_cr[p, sigma] * self.fermi_an[q, sigma],
+            ),
+        )
+        self.set_name(e_=self.e_)
 
 
 class PartHoleEPhDrudge(GenEPhDrudge):
