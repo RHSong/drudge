@@ -1506,8 +1506,10 @@ class GenEPhDrudge(MixDrudge):
     DEFAULT_FERMI_DUMMS = symbols("p q r s") + tuple(
         Symbol("p{}".format(i)) for i in range(21)
     )
-    DEFAULT_BOSE_DUMMS = symbols("x y z") + tuple(
-        Symbol("x{}".format(i)) for i in range(21)
+    # No ``z`` here, since it is conventionally used for amplitudes, and a
+    # tensor named as a dummy would be renamed together with the dummies.
+    DEFAULT_BOSE_DUMMS = symbols("x y") + tuple(
+        Symbol("x{}".format(i)) for i in range(22)
     )
     DEFAULT_BOSE_RANGE = Range("B", 0, Symbol("nb"))
     DEFAULT_SPIN_DUMMS = tuple(
@@ -1900,7 +1902,10 @@ class PartHoleEPhDrudge(GenEPhDrudge):
         self,
         *args,
         fermi_op_label="c",
-        part_orb=(Range("V", 0, Symbol("nv")), DEFAULT_PART_DUMMS),
+        part_orb=(
+            Range("V", Symbol("no"), Symbol("no") + Symbol("nv")),
+            DEFAULT_PART_DUMMS,
+        ),
         hole_orb=(Range("O", 0, Symbol("no")), DEFAULT_HOLE_DUMMS),
         all_orb_dumms=DEFAULT_ORB_DUMMS,
         spin=(),
@@ -2039,7 +2044,7 @@ class SpinOneHalfPartHoleEPhDrudge(PartHoleEPhDrudge):
         self,
         *args,
         part_orb=(
-            Range("V", 0, Symbol("nv")),
+            Range("V", Symbol("no"), Symbol("no") + Symbol("nv")),
             PartHoleEPhDrudge.DEFAULT_PART_DUMMS + symbols("beta gamma"),
         ),
         hole_orb=(
